@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>啤酒游戏</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 顶部导航 -->
+      <header class="app-header">
+        <h1>🍺 啤酒游戏</h1>
+        <button id="help-btn" class="icon-btn" title="帮助">?</button>
+      </header>
+
+      <!-- 配置页面 -->
+      <section id="setup-section" class="page">
+        <div class="card">
+          <h2>⚙️ 配置</h2>
+          
+          <!-- 基础配置 -->
+          <div class="compact-form">
+            <div class="form-row">
+              <div class="form-item">
+                <label>链长</label>
+                <input type="number" id="supply-chain-length" min="2" max="5" value="4">
+              </div>
+              <div class="form-item">
+                <label>周期</label>
+                <input type="number" id="game-cycles" min="20" max="50" value="30">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-item">
+                <label>初始库存</label>
+                <input type="number" id="initial-inventory" min="0" value="20">
+              </div>
+              <div class="form-item">
+                <label>安全库存</label>
+                <input type="number" id="safety-stock" min="0" value="10">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-item">
+                <label>订单延迟</label>
+                <input type="number" id="order-delay" min="1" value="1">
+              </div>
+              <div class="form-item">
+                <label>物流延迟</label>
+                <input type="number" id="logistics-delay" min="1" value="1">
+              </div>
+            </div>
+          </div>
+
+          <!-- 高级配置折叠 -->
+          <details class="advanced-config">
+            <summary>高级配置</summary>
+            <div class="compact-form">
+              <div class="form-row">
+                <div class="form-item">
+                  <label>库存成本</label>
+                  <input type="number" id="inventory-cost" step="0.1" min="0.1" value="0.3">
+                </div>
+                <div class="form-item">
+                  <label>缺货成本</label>
+                  <input type="number" id="shortage-cost" step="0.1" min="0.1" value="0.8">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item wide">
+                  <label>信息模式</label>
+                  <select id="information-mode">
+                    <option value="opaque">不透明</option>
+                    <option value="transparent">透明</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item wide">
+                  <label>AI策略</label>
+                  <select id="ai-strategy">
+                    <option value="simple">简单规则</option>
+                    <option value="smoothing">平滑策略</option>
+                    <option value="collaborative">协同策略</option>
+                    <option value="aggressive">激进型</option>
+                    <option value="conservative">保守型</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item wide">
+                  <label>市场需求类型</label>
+                  <select id="demand-type">
+                    <option value="stable">稳定需求</option>
+                    <option value="fluctuating">波动需求</option>
+                    <option value="seasonal">季节性需求</option>
+                    <option value="random">随机需求</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- 节点配置 -->
+          <div class="node-config">
+            <h3>节点配置</h3>
+            <div id="node-types-container" class="node-list">
+              <!-- 动态生成 -->
+            </div>
+          </div>
+
+          <!-- 玩家选择 -->
+          <div class="player-select">
+            <label>扮演角色</label>
+            <select id="player-node">
+              <!-- 动态生成 -->
+            </select>
+          </div>
+
+          <button type="button" id="start-game" class="btn-primary">开始游戏</button>
+        </div>
+      </section>
+
+      <!-- 游戏页面 -->
+      <section id="game-section" class="page" style="display: none;">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-label">周期</span>
+            <span class="status-value"><span id="current-cycle">0</span>/<span id="total-cycles">30</span></span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">库存</span>
+            <span class="status-value" id="total-inventory">0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">成本</span>
+            <span class="status-value" id="total-cost">0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">需求</span>
+            <span class="status-value" id="current-demand">0</span>
+          </div>
+        </div>
+
+        <!-- 游戏内容区域 -->
+        <div class="game-content">
+          <!-- 节点状态 -->
+          <div class="game-section">
+            <h3>节点状态</h3>
+            <div id="node-status" class="node-grid">
+              <!-- 动态生成 -->
+            </div>
+          </div>
+
+          <!-- 订单操作 -->
+          <div class="game-section">
+            <h3>订单操作</h3>
+            <div class="order-panel">
+              <div class="order-input-group">
+                <label>下单数量</label>
+                <div class="order-controls">
+                  <button type="button" class="btn-adjust" data-action="decrease">-</button>
+                  <input type="number" id="order-quantity" min="0" value="10">
+                  <button type="button" class="btn-adjust" data-action="increase">+</button>
+                </div>
+              </div>
+              <div class="order-actions">
+                <button type="button" id="submit-order" class="btn-primary">提交订单</button>
+                <div class="quick-orders">
+                  <button type="button" class="btn-quick" data-value="5">+5</button>
+                  <button type="button" class="btn-quick" data-value="10">+10</button>
+                  <button type="button" class="btn-quick" data-value="20">+20</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 图表显示 -->
+          <div class="game-section">
+            <h3>库存趋势</h3>
+            <div class="chart-container">
+              <canvas id="game-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 结果页面 -->
+      <section id="results-section" class="page" style="display: none;">
+        <div class="card">
+          <h2>📊 游戏结果</h2>
+          
+          <div class="result-summary">
+            <div class="result-item">
+              <span class="result-label">总成本</span>
+              <span class="result-value" id="result-total-cost">0</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">平均成本/周期</span>
+              <span class="result-value" id="result-avg-cost">0</span>
+            </div>
+          </div>
+
+          <details class="result-details">
+            <summary>各节点详情</summary>
+            <div id="results-summary" class="node-results">
+              <!-- 动态生成 -->
+            </div>
+          </details>
+
+          <details class="result-details">
+            <summary>牛鞭效应分析</summary>
+            <div class="chart-container small">
+              <canvas id="bullwhip-chart"></canvas>
+            </div>
+          </details>
+
+          <details class="result-details">
+            <summary>数据表格</summary>
+            <div class="data-table-container">
+              <table id="game-data-table" class="data-table">
+                <!-- 动态生成 -->
+              </table>
+            </div>
+          </details>
+
+          <details class="result-details">
+            <summary>改进建议</summary>
+            <div id="improvement-suggestions" class="suggestions">
+              <!-- 动态生成 -->
+            </div>
+          </details>
+
+          <div class="action-buttons">
+            <button type="button" id="export-data" class="btn-secondary">导出数据</button>
+            <button type="button" id="generate-poster" class="btn-secondary">生成海报</button>
+            <button type="button" id="restart-game" class="btn-primary">重新开始</button>
+          </div>
+
+          <!-- 海报模态框 -->
+          <div id="poster-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3>游戏评分海报</h3>
+                <button class="modal-close">&times;</button>
+              </div>
+              <div class="modal-body">
+                <div id="score-poster" class="score-poster">
+                  <!-- 动态生成 -->
+                </div>
+                <button type="button" id="download-poster" class="btn-primary">保存海报</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 帮助弹窗 -->
+      <div id="help-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>游戏规则</h3>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <h4>🎯 目标</h4>
+            <p>管理供应链库存，最小化总成本（库存成本+缺货成本）。</p>
+            
+            <h4>📋 规则</h4>
+            <ul>
+              <li>每个周期根据需求下单</li>
+              <li>库存持有成本：每单位/周期</li>
+              <li>缺货成本：每单位/周期（更高）</li>
+              <li>订单有处理延迟</li>
+              <li>物流有运输延迟</li>
+            </ul>
+            
+            <h4>💡 提示</h4>
+            <ul>
+              <li>平衡库存和缺货成本</li>
+              <li>观察牛鞭效应</li>
+              <li>尝试信息透明模式</li>
+              <li>比较不同AI策略</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
