@@ -12,8 +12,6 @@
     "vite": "^8.0.1"
   },
   "dependencies": {
-    "@emnapi/core": "^1.9.1",
-    "@emnapi/runtime": "^1.9.1",
     "chart.js": "^4.5.1"
   }
 }
